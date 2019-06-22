@@ -31,7 +31,7 @@ sudo apt-get -y update
 sudo apt-mark hold grub 
 sudo apt-mark hold grub-pc
 sudo apt-get -y upgrade
-sudo apt-get install -y zip unzip curl wget socat ebtables git vim 
+sudo apt-get install -y zip unzip curl wget socat ebtables git vim make
 
 SCRIPT
 
@@ -49,6 +49,12 @@ sudo apt-get install -y docker-ce=17.03.3~ce-0~ubuntu-$(lsb_release -cs)
 sudo systemctl start docker
 
 sudo usermod -a -G docker vagrant
+
+SCRIPT
+
+$goss = <<SCRIPT
+#!/bin/bash
+curl -fsSL https://goss.rocks/install | sudo sh
 
 SCRIPT
 
@@ -178,7 +184,6 @@ def configureVM(vmCfg, hostname, cpus, mem, srcdir, dstdir)
     provider.machine_virtual_size = 64
     provider.video_vram = 64
 
- 
     override.vm.synced_folder srcdir, dstdir, type: 'sshfs', ssh_opts_append: "-o Compression=yes", sshfs_opts_append: "-o cache=no", disabled: false, create: true
   end
   
@@ -194,6 +199,7 @@ def configureVM(vmCfg, hostname, cpus, mem, srcdir, dstdir)
   vmCfg.vm.provision "shell", inline: $docker, privileged: false 
   # Script to prepare the VM
   vmCfg.vm.provision "shell", inline: $installer, privileged: false 
+  vmCfg.vm.provision "shell", inline: $goss, privileged: false 
   vmCfg.vm.provision "shell", inline: $growpart, privileged: false if GROWPART == "true"
   vmCfg.vm.provision "shell", inline: $minikubescript, privileged: false, env: {"KUBERNETES_VERSION" => KUBERNETES_VERSION}
 
